@@ -36,6 +36,16 @@ static void erase_code_progress(void) {
   flash_lock();
 }
 
+static void erase_first_sector(void) {
+  flash_wait_for_last_operation();
+  flash_clear_status_flags();
+  flash_unlock();
+  flash_erase_sector(FLASH_CODE_SECTOR_FIRST, FLASH_CR_PROGRAM_X32);
+  flash_wait_for_last_operation();
+  flash_lock();
+}
+
+
 // static void erase_storage(void) {
 //   flash_wait_for_last_operation();
 //   flash_clear_status_flags();

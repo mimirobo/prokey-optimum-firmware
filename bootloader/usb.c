@@ -63,6 +63,7 @@ static uint8_t flash_anim = 0;
 static uint32_t stackPointer = 0;
 static uint32_t buttonsTestCounter = 0;
 static uint32_t buttonsTestThreshold = 4000000;
+static SHA256_CTX ctx;
 
 aes_decrypt_ctx decCtx;
 
@@ -243,12 +244,12 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
 
       if( proceed )
       {
-          erase_code_progress();
+        erase_code_progress();
 
-          send_msg_success(dev);
-          flash_state = STATE_FLASHSTART;
+        send_msg_success(dev);
+        flash_state = STATE_FLASHSTART;
 
-          return;
+        return;
       }
 
       send_msg_failure(dev);
@@ -285,6 +286,10 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
 				return;
 			}
 
+      //! Initialize the firmware hasher context
+      sha256_Init(&ctx);
+
+      //! Initialize AES-256 with session key that generated from mutual authenticate
 			aes_init();
 			aes_decrypt_key256(AuthGet()->sessionKeyHash, &decCtx );
 
@@ -303,6 +308,7 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
 
 					uint8_t plain[16] __attribute__((aligned(4)));
 					aes_decrypt( toDecript, plain, &decCtx );
+          sha256_Update(&ctx, plain, 16);
 					
 					for( int i=0; i<16; i+=4 )
 					{
@@ -357,6 +363,12 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
 				
 				uint8_t plain[16] __attribute__((aligned(4)));
 				aes_decrypt( toDecript, plain, &decCtx );
+
+        //! Hash all data except the last 32 bytes which is hash itself
+        if(flash_pos < flash_len - 32)
+        {
+          sha256_Update(&ctx, plain, 16);
+        }
 				
 				for( int i=0; i<16; i+=4 )
 				{
@@ -373,9 +385,21 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
 		// flashing done
 		if (flash_pos == flash_len) 
 		{
-      //! The reason we check the SP here is that flashing the firmware is a time consuming process and this time prevents attacker(man in the middle) to
-      //! brute force different Encrypted Key
-      //TODO: Better to check a magic to make sure Encrypted Key is correct.
+      uint8_t fwHash[32];
+
+      sha256_Final(&ctx, fwHash);
+
+      //! Compare hash(flash content) to last 32 bytes of flash content which is hash of fimware 
+      if(memcmp(fwHash, (uint8_t*)(FLASH_APP_START + flash_len - 32), 32) != 0)
+      {
+        erase_first_sector();
+        send_msg_failure(dev);
+        flash_state = STATE_END;
+        layoutDialog(&bmp_icon_error, NULL, NULL, NULL, "Error installing ", "firmware.", NULL, "Unplug your ProKey", "and try again.", "ERR:HASH");
+        return;
+      }
+      
+      //! Double check the stack pointer
       if((stackPointer & 0x2FFE0000) != 0x20000000)
       {
         send_msg_failure(dev);

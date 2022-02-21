@@ -28,6 +28,7 @@
         "types.h": "c",
         "layout.h": "c",
         "pin_number.h": "c",
-        "firmwareauthkey.h": "c"
+        "firmwareauthkey.h": "c",
+        "sha2.h": "c"
     },
 }
