@@ -1,3 +1,8 @@
+
+#if EMULATOR
+#define FLASH_CR_PROGRAM_X32 0
+#endif
+
 static void erase_storage_code_progress(void) {
   flash_wait_for_last_operation();
   flash_clear_status_flags();

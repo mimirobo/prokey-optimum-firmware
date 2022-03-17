@@ -28,6 +28,9 @@
         "types.h": "c",
         "layout.h": "c",
         "pin_number.h": "c",
-        "firmwareauthkey.h": "c"
+        "firmwareauthkey.h": "c",
+        "otg_common.h": "c",
+        "usb21_standard.h": "c",
+        "usb_desc.h": "c"
     },
 }

@@ -13,9 +13,10 @@ OBJS += rng.o
 ifneq ($(EMULATOR),1)
 OBJS += setup.o
 OBJS += serialno.o
-OBJS += auth.o
 OBJS += otp.o
 endif
+
+OBJS += auth.o
 
 OBJS += util.o
 OBJS += memory.o

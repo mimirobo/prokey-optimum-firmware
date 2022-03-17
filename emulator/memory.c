@@ -33,6 +33,8 @@ void flash_clear_status_flags(void) {}
 void flash_lock_option_bytes(void) {}
 void flash_unlock_option_bytes(void) {}
 
+void flash_wait_for_last_operation(void) {}
+
 void flash_program_option_bytes(uint32_t data) { (void)data; }
 
 static ssize_t sector_to_offset(uint8_t sector) {

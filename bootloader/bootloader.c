@@ -142,6 +142,7 @@ void bootloader_loop(void)
 	{
 		if( MenuAskForRunBootloader() == 0 )
 		{
+#if !EMULATOR
 			//! Enable Low Speed Internal clock 
 			rcc_osc_on(RCC_LSI);
 
@@ -157,6 +158,7 @@ void bootloader_loop(void)
 			iwdg_start();
 
 			while(1);
+#endif
 		}
 	}
 
@@ -168,13 +170,14 @@ void bootloader_loop(void)
 
 int main(void) {
 
+#if !EMULATOR
 	setup();
 
 	__stack_chk_guard = random32();  // this supports compiler provided
 									// unpredictable stack protection checks
 
+
 	memory_protect();
-	oledInit();
 
 	// HW_UNIQUE_ID will be used in Authenticating
 	desig_get_unique_id(HW_UNIQUE_ID);
@@ -184,6 +187,9 @@ int main(void) {
 
 	// Update AuthKey from firmware content
 	UpdateAuthKey();
+#endif
+
+	oledInit();
 
 	AuthInit();
 
