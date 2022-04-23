@@ -10,6 +10,7 @@ OBJS += timer.o
 OBJS += ws.o
 
 OBJS += strl.o
+OBJS += emulator_events.o
 
 libemulator.a: $(OBJS)
 	$(AR) rcs $@ $(OBJS)

@@ -23,8 +23,13 @@
 #if EMULATOR
 
 #include "strl.h"
+#include "ui/prokey_button.h"
 
 #include <stddef.h>
+
+void initButtons(void);
+void renderButtons(void);
+void updateEmulatorButtonState(void);
 
 void emulatorPoll(void);
 void emulatorRandom(void *buffer, size_t size);

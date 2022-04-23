@@ -18,9 +18,11 @@
  */
 
 #include "oled.h"
+#include "emulator_events.h"
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+#include <SDL2/SDL2_gfxPrimitives.h>
 
 static SDL_Window *window = NULL;
 static SDL_Renderer *renderer = NULL;
@@ -30,8 +32,12 @@ static SDL_Rect dstrect, prokey_srcrect;
 static int ex_width = 20;
 static int ex_height = 118;
 SDL_MouseButtonEvent g_MouseEvent;
-bool g_MouseIsDown = false;
+SDL_MouseMotionEvent g_MouseMotionEvent;
 int g_scale = 1;
+uint16_t EmulatorButtonState = 0;
+
+//UI
+struct ProkeyRoundButton* ui_buttons[4];
 
 #define ENV_OLED_FULLSCREEN "TREZOR_OLED_FULLSCREEN"
 #define ENV_OLED_SCALE "TREZOR_OLED_SCALE"
@@ -153,6 +159,8 @@ void oledInit(void)
   prokey_srcrect.w = 318;
   prokey_srcrect.h = 390;
 
+  initButtons();
+
   oledClear();
   oledRefresh();
 }
@@ -183,6 +191,7 @@ void oledRefresh(void)
   SDL_RenderCopy(renderer, prokey_texture, &prokey_srcrect, NULL);
   SDL_RenderCopy(renderer, texture, NULL, &dstrect);
 
+  renderButtons();
   SDL_RenderPresent(renderer);
 
   /* Return it back */
@@ -195,7 +204,6 @@ void emulatorPoll(void)
 
   if (SDL_PollEvent(&event))
   {
-    g_MouseIsDown = false;
     if (event.type == SDL_QUIT)
     {
       exit(1);
@@ -214,12 +222,16 @@ void emulatorPoll(void)
         break;
       }
     }
-    else if (event.type == SDL_MOUSEBUTTONDOWN)
+    else if (event.type == SDL_MOUSEMOTION)
     {
-      g_MouseIsDown = true;
+      g_MouseMotionEvent = event.motion;
+      oledRefresh();
+    }
+    else if (event.type == SDL_MOUSEBUTTONDOWN || event.type == SDL_MOUSEBUTTONUP)
+    {
       g_MouseEvent = event.button;
       oledRefresh();
-    }    
+    }
     else if (event.type == SDL_KEYUP)
     {
       oledRefresh();
@@ -232,6 +244,62 @@ void emulatorPoll(void)
         SDL_SetWindowBordered(window, SDL_TRUE);
       }
     }
-    
+
+    updateEmulatorButtonState();
+  }
+}
+
+void updateEmulatorButtonState(void)
+{
+  EmulatorButtonState = 0;
+  for (int i = 0; i < 4; i++)
+  {
+    if (ui_buttons[i]->isClicked)
+    {
+      ui_buttons[i]->isClicked &= isMouseLeftButtonDown();
+      EmulatorButtonState |= ui_buttons[i]->hardwareCode;
+    }
+  }
+}
+
+void initButtons(void)
+{
+  for (int i = 0; i < 4; i++)
+  {
+    ui_buttons[i] = malloc(sizeof(struct ProkeyRoundButton));
+    ui_buttons[i]->y = 145;
+    ui_buttons[i]->r = 11;
+  }
+
+  ui_buttons[0]->x = 29;
+  ui_buttons[0]->hardwareCode = BTN_PIN_NO;
+
+  ui_buttons[1]->x = 59;
+  ui_buttons[1]->hardwareCode = BTN_PIN_DOWN;
+
+  ui_buttons[2]->x = 88;
+  ui_buttons[2]->hardwareCode = BTN_PIN_UP;
+
+  ui_buttons[3]->x = 117;
+  ui_buttons[3]->hardwareCode = BTN_PIN_YES;
+}
+
+void renderButtons()
+{
+  for (int i = 0; i < 4; i++)
+  {
+    ui_buttons[i]->isHover = isMouseOverButton(ui_buttons[i]);
+    if (ui_buttons[i]->isHover)
+    {
+      ui_buttons[i]->isClicked = isMouseLeftButtonDown();
+      if (ui_buttons[i]->isClicked)
+      {
+        filledCircleRGBA(renderer, ui_buttons[i]->x, ui_buttons[i]->y, ui_buttons[i]->r, 255, 255, 255, 50);
+      }
+      else
+      {
+        filledCircleRGBA(renderer, ui_buttons[i]->x, ui_buttons[i]->y, ui_buttons[i]->r, 0, 255, 255, 80);
+      }
+    }
   }
 }

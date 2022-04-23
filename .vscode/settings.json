@@ -30,6 +30,8 @@
         "curves.h": "c",
         "secp256k1.h": "c",
         "ecdsa.h": "c",
-        "*.table": "c"
+        "*.table": "c",
+        "buttons.h": "c",
+        "emulator_events.h": "c"
     },
 }
