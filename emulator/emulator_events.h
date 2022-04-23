@@ -5,12 +5,14 @@
 #include "buttons.h"
 
 extern SDL_MouseButtonEvent g_MouseEvent;
-extern bool g_MouseIsDown;
+extern SDL_MouseMotionEvent g_MouseMotionEvent;
 extern int g_scale;
 
 
 void handleKeyboardEvents(uint16_t *state);
 void handleMouseEvents(uint16_t *state);
+bool isMouseLeftButtonDown();
+bool isMouseOverButton(struct ProkeyRoundButton *button);
 
 #endif // __EMULATOR_EVENTS__
 

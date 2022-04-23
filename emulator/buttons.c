@@ -20,11 +20,14 @@
 #include "buttons.h"
 #include "emulator_events.h"
 
+extern uint16_t EmulatorButtonState;
+
 uint16_t buttonRead(void) {
   uint16_t state = 0;
   emulatorPoll();
   handleKeyboardEvents(&state);
   handleMouseEvents(&state);
+  state |= EmulatorButtonState;
 
   return ~state;
 }

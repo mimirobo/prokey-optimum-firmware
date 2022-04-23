@@ -21,26 +21,28 @@ void handleKeyboardEvents(uint16_t *state)
 
 void handleMouseEvents(uint16_t *state)
 {
-    if (g_MouseIsDown)
+  // todo: handle extra mouse events here
+}
+
+bool isMouseLeftButtonDown()
+{
+  static bool cached_state = false;
+  if (g_MouseEvent.button == SDL_BUTTON_LEFT)
   {
-      if (g_MouseEvent.y > 136 * g_scale && g_MouseEvent.y < 156 * g_scale)
-      {
-        if (g_MouseEvent.x > 19 * g_scale && g_MouseEvent.x < 41 * g_scale)
-        {
-          *state |= BTN_PIN_NO;
-        }
-        else if (g_MouseEvent.x > 49 * g_scale && g_MouseEvent.x < 71 * g_scale)
-        {
-          *state |= BTN_PIN_DOWN;
-        }
-        else if (g_MouseEvent.x > 78 * g_scale && g_MouseEvent.x < 99 * g_scale)
-        {
-          *state |= BTN_PIN_UP;
-        }
-        else if (g_MouseEvent.x > 107 * g_scale && g_MouseEvent.x < 128 * g_scale)
-        {
-          *state |= BTN_PIN_YES;
-        }
-      }
+    cached_state = (g_MouseEvent.state == SDL_PRESSED);
   }
+
+  return cached_state;
+}
+
+bool isMouseOverButton(struct ProkeyRoundButton *button)
+{
+  if (g_MouseMotionEvent.y > (button->y - button->r) * g_scale && g_MouseMotionEvent.y < (button->y + button->r) * g_scale)
+  {
+    if (g_MouseMotionEvent.x > (button->x - button->r) * g_scale && g_MouseMotionEvent.x < (button->x + button->r) * g_scale)
+    {
+      return true;
+    }
+  }
+  return false;
 }
